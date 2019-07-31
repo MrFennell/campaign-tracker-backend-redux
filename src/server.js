@@ -3,11 +3,11 @@ const bodyParser = require('body-parser');
 const cookieParser = require('cookie-parser');
 const session = require('express-session');
 const morgan = require('morgan');
-
 const passport = require('./passport');
 const models = require('../models');
 
 const app = express();
+
 app.locals.models = models;
 
 app.use(morgan(process.env.NODE_ENV === 'development' ? 'dev' : 'combined'));
@@ -50,5 +50,9 @@ app.use(passport.initialize());
 app.use(passport.session());
 
 app.use(require('./routes'));
+
+app.get('/', function(req, res){
+    res.render('index');
+});
 
 module.exports = app;

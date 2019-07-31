@@ -1,18 +1,22 @@
 const express = require('express');
-
+const path = require('path');
 const router = express.Router();
 const models = require('../../models');
 
-router.get('/', async function(req, res){
-    res.json(index);
-});
+// router.get('/', async function(req, res){
+//     res.json(index);
+// });
+
+router.use('/static', express.static(path.join(__dirname,"/dist/"))); 
+router.get('/', function(req,res) {
+    res.sendFile('index.html', { root: path.join(__dirname, '/dist/') });
+ });
 
 router.post('/addCampaign', async (req, res) => {
     const cTitle = req.body.title;
     const cDescription = req.body.description;
     const userId = req.user.id;
     const thisUser = await models.User.findByPk(userId);
-    console.log("!!!!!!!!!!!!!!!!!!!!"+userId);
     try {
         models.Campaign.create({
             title: cTitle, 
