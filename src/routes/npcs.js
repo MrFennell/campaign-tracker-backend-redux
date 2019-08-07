@@ -16,7 +16,6 @@ router.get('/', async function (req,res){
     const campaign = await req.campaign;
     try{
         const npcs = await campaign.getNpcs();
-        console.log('!!!!!!!!!!!!!!!!!!!!!'+npcs);
         if (npcs){
             res.json(npcs);
         }else{

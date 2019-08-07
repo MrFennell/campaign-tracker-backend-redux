@@ -30,10 +30,22 @@ app.use(session({
     secret: 'Shhhhh!',
     store: sessionStore,
     saveUninitialized: false,
+    cookie: {domain:'.webfennell.com'},
     resave: false
 }));
 
 app.use(function(req, res, next) {
+
+    // Website you wish to allow to connect
+    res.setHeader('Access-Control-Allow-Origin', 'campaigntracker.fennellweb.com');
+    // Request methods you wish to allow
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS, PUT, PATCH, DELETE');
+    // Request headers you wish to allow
+    res.setHeader('Access-Control-Allow-Headers', 'access-control-allow-origin,Origin,X-Requested-With,content-type');
+    // Set to true if you need the website to include cookies in the requests sent
+    // to the API (e.g. in case you use sessions)
+    res.setHeader('Access-Control-Allow-Credentials', true);
+
     if (req.session && req.session.campaign_id) {
         models.Campaign.findByPk(req.session.campaign_id)
             .then(function(campaign) {
@@ -44,7 +56,6 @@ app.use(function(req, res, next) {
         next();
     }
 });
-
 
 app.use(passport.initialize());
 app.use(passport.session());
