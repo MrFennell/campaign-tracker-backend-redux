@@ -30,7 +30,7 @@ app.use(session({
     secret: 'Shhhhh!',
     store: sessionStore,
     saveUninitialized: false,
-    cookie: {domain:'.fennellweb.com'},
+    cookie: {domain:'.herokuapp.com'},
     resave: false
 }));
 
