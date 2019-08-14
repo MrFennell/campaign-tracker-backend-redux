@@ -65,17 +65,55 @@ router.get('/campaigns', async function (req,res){
         }catch(err){
             console.log(err);
             return(err)
-        } 
+        }
     }
     else{
         res.json('');
     }
-
 })
 
-// router.get('/campaigns/:campaign_id', async function(req, res){
-//     await res.json(req.campaign);
-// })
+router.get('/campaignThumbnails', async function (req,res){
+    const user = req.user;
+    if (user){
+        try{
+            const campaigns = await user.getCampaigns();
+            if (campaigns){
+                let obj = {};
+                let urls = [];
+                let campaignList = [];
+                let imageUrl = ''
+                for  (let i = 0; i < campaigns.length; i++){
+                    try{
+                        const pcs = await campaigns[i].getPcs();
+                        for (let i = 0; i < pcs.length; i++){
+                            imageUrl = pcs[i].imageSrc;
+                            urls.push(imageUrl);
+                        }
+                        obj.Role = campaigns[i].UserCampaign.role;
+                        obj.id = campaigns[i].id;
+                        obj.title = campaigns[i].title;
+                        obj.thumbnails = urls;
+                        campaignList.push(obj);
+                        obj = {}
+                        urls = []
+                    }catch(err){
+                        console.log(err);
+                        return(err)
+                    }
+                }
+                // res.json(urls);
+                res.json(campaignList);
+
+            }
+        }catch(err){
+            console.log(err);
+            return(err)
+        }
+    }
+    else{
+        res.json('');
+    }
+})
 
 router.post('/updateCampaign',  async (req, res) => {
     const campaignId = req.body.id;
