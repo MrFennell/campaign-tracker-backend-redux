@@ -33,10 +33,11 @@ app.use(session({
     saveUninitialized: false,
     proxy: true,
     cookie: {
+        domain:'.webfennell.com',
         maxAge: 5184000000,
         secure: false
     },
-    resave: false
+    resave: true
 }));
 
 app.use(function(req, res, next) {
