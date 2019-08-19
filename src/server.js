@@ -32,7 +32,6 @@ app.use(session({
     saveUninitialized: false,
     cookie: {
         domain:'.webfennell.com',
-        secure: true,
         httpOnly: false,
         maxAge: 5184000000
     },
