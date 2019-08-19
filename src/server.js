@@ -30,6 +30,7 @@ app.use(session({
     secret: 'Shhhhh!',
     store: sessionStore,
     saveUninitialized: false,
+    cookie: {domain:'webfennell.com'},
     resave: false
 }));
 
