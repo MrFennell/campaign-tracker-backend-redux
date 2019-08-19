@@ -34,9 +34,8 @@ app.use(session({
     proxy: true,
     cookie: {
         domain:'.webfennell.com',
-        httpOnly: true,
         maxAge: 5184000000,
-        secure: true
+        secure: false
     },
     resave: false
 }));
