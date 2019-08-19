@@ -30,12 +30,11 @@ app.use(session({
     secret: 'Shhhhh!',
     store: sessionStore,
     saveUninitialized: false,
-    cookie: {domain:'webfennell.com'},
+    cookie: {domain:'.webfennell.com'},
     resave: false
 }));
 
 app.use(function(req, res, next) {
-
     // Website you wish to allow to connect
     res.setHeader('Access-Control-Allow-Origin', 'https://campaigntracker.webfennell.com');
     // Request methods you wish to allow
