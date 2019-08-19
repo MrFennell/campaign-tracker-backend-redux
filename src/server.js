@@ -26,10 +26,12 @@ var sessionStore = new SequelizeStore({
     db: models.sequelize
 });
 sessionStore.sync();
+app.set('trust proxy', 1);
 app.use(session({
     secret: 'Shhhhh!',
     store: sessionStore,
     saveUninitialized: false,
+    proxy: true,
     cookie: {
         domain:'.webfennell.com',
         httpOnly: false,
