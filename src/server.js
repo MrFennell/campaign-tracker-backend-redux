@@ -30,14 +30,14 @@ app.use(session({
     secret: 'Shhhhh!',
     store: sessionStore,
     saveUninitialized: false,
-    cookie: {domain:'.fennellweb.com'},
+    cookie: {domain:'.webfennell.com'},
     resave: false
 }));
 
 app.use(function(req, res, next) {
 
     // Website you wish to allow to connect
-    res.setHeader('Access-Control-Allow-Origin', 'campaigntracker.fennellweb.com');
+    res.setHeader('Access-Control-Allow-Origin', 'https://campaigntracker.webfennell.com');
     // Request methods you wish to allow
     res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS, PUT, PATCH, DELETE');
     // Request headers you wish to allow
