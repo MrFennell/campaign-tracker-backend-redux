@@ -5,8 +5,10 @@ const session = require('express-session');
 const morgan = require('morgan');
 const passport = require('./passport');
 const models = require('../models');
+require('dotenv').config()
 
 const app = express();
+
 
 app.locals.models = models;
 

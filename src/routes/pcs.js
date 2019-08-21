@@ -1,16 +1,34 @@
 const express = require('express');
-
 const router = express.Router();
 const models = require('../../models');
+const aws = require('aws-sdk');
 const multer = require('multer');
+const multerS3 = require('multer-s3');
+const fs = require('fs')
+const dateNow = Date.now() //date used for unique image id
+const Bucket = process.env.AWS_BUCKET_NAME
+
+aws.config.update({
+    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY_ID,
+    accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+    region: process.env.AWS_REGION,
+});
+
+
+const s3 = new aws.S3();
 
 const uploadPc = multer({
-    dest: './public/images/pcs',
-    limits: {
-        fieldSize: 25 * 1024 * 1024
-    },
-    preservePath: false
-})
+    storage: multerS3({
+        s3: s3,
+        acl: 'public-read',
+        bucket: 'campaign-tracker',
+        key: function (req, file, cb) {
+            console.log(file);
+            console.log(dateNow);
+            cb(null, 'pcs/'+dateNow+file.originalname);
+        }
+    })
+});
 
 router.get('/', async function (req,res){
     const campaign = await req.campaign;
@@ -25,8 +43,8 @@ router.get('/', async function (req,res){
         console.log(err);
     } 
 });
-
 router.post("/addPcWithImage", uploadPc.single('file'), async (req,res) => {
+
     const newPcName = req.body.pcName;
     const newPcClass = req.body.pcClass;
     const newPlayerName = req.body.playerName;
@@ -36,12 +54,9 @@ router.post("/addPcWithImage", uploadPc.single('file'), async (req,res) => {
     const newPcSharedBio = req.body.pcSharedBio;
     const newPcPrivateBio = req.body.pcPrivateBio;
     const newPcDescription = req.body.pcDescription;
-    const fileDestination = req.file.destination;
-    const fileName = req.file.filename;
-    const slicedFileDestination = fileDestination.slice(8);
-    const newPcImageSrc = slicedFileDestination + "/" + fileName;
     const campaignId = req.campaign.id
     const campaign = await models.Campaign.findByPk(campaignId);
+    const newPcImageSrc = dateNow + req.file.originalname
     
     if (campaign) {
        await models.Pc.create({
@@ -86,12 +101,10 @@ router.post('/addPc', uploadPc.none(), async (req, res) => {
     const newPcSharedBio = req.body.pcSharedBio;
     const newPcPrivateBio = req.body.pcPrivateBio;
     const newPcDescription = req.body.pcDescription;
-
     const campaignId = req.campaign.id;
-    let campaign = await models.Campaign.findByPk(campaignId);
+    const campaign = await models.Campaign.findByPk(campaignId);
 
     if (campaign) {
-
         await models.Pc.create({
             pcName: newPcName, 
             pcClass: newPcClass, 
@@ -107,7 +120,7 @@ router.post('/addPc', uploadPc.none(), async (req, res) => {
         .then(async function(pc){
             campaign.addPc(pc);
         })
-
+        
         .then (async function(){
             try{
                 let campaignId = req.campaign.id;
@@ -152,9 +165,9 @@ router.post('/updatePc',  async (req, res) => {
                 pcPrivateBio: newPcPrivateBio,
                 pcDescription: newPcDescription
             })
+           
             .then (async function(){
                 const campaign = await req.campaign;
-                
                 try{
                     const pcs = await campaign.getPcs();
                     if (pcs){
@@ -184,12 +197,8 @@ router.post('/updatePcWithImage', uploadPc.single('file'), async (req, res) => {
     const newPcSharedBio = req.body.pcSharedBio;
     const newPcPrivateBio = req.body.pcPrivateBio;
     const newPcDescription = req.body.pcDescription;
-    const fileDestination = req.file.destination;
-    const fileName = req.file.filename;
-
-    const slicedFileDestination = fileDestination.slice(8);
-    const newPcImageSrc = slicedFileDestination + "/" + fileName;
-
+    const oldImage = req.body.oldImage;
+    const newPcImageSrc = dateNow + req.file.originalname
     var thisPc = await models.Pc.findByPk(pcId);
     
     if (thisPc){
@@ -204,6 +213,16 @@ router.post('/updatePcWithImage', uploadPc.single('file'), async (req, res) => {
                 pcPrivateBio: newPcPrivateBio,
                 pcDescription: newPcDescription,
                 imageSrc: newPcImageSrc
+            })
+            .then(async function(){
+                if (oldImage !== undefined && oldImage !== null){
+                    const s3 = new aws.S3()
+                    s3.deleteObject({
+                        Bucket: Bucket,
+                        Key: 'pcs/'+oldImage
+                    },
+                    function (err,data){})
+                }
             })
             .then (async function(){
                 const campaign = await req.campaign;
@@ -227,22 +246,22 @@ router.post('/updatePcWithImage', uploadPc.single('file'), async (req, res) => {
 router.post('/updatePcImage', uploadPc.single('file'), async (req, res) => {
     const pcId = req.body.PcId;
     const oldImage = req.body.oldImage;
-    const fileDestination = req.file.destination;
-    const fileName = req.file.filename;
-    const slicedFileDestination = fileDestination.slice(8);
-    const newPcImageSrc = slicedFileDestination + "/" + fileName;
-    let thisPc = await models.Pc.findByPk(pcId);
-
+   
+    const newPcImageSrc = dateNow + req.file.originalname
+   
+    const thisPc = await models.Pc.findByPk(pcId);
     if (thisPc){
-
         await thisPc.update({
                 imageSrc: newPcImageSrc
             })
             .then(async function(){
-                console.log('old-image '+oldImage);
                 if (oldImage !== undefined && oldImage !== null){
-                    var fs= require ('fs');
-                    fs.unlinkSync('./public'+oldImage)
+                    const s3 = new aws.S3()
+                    s3.deleteObject({
+                        Bucket: Bucket,
+                        Key: 'pcs/'+oldImage
+                    },
+                    function (err,data){})
                 }
             })
             .then (async function(){
@@ -263,19 +282,20 @@ router.post('/updatePcImage', uploadPc.single('file'), async (req, res) => {
 
 router.post('/deletePc', uploadPc.none(), async (req, res) => {
     const pcId = req.body.id;
-    const thisPc = await models.Pc.findByPk(pcId);
+    let thisPc = await models.Pc.findByPk(pcId);
     const oldImage = req.body.imageSrc;
-
     if (thisPc){
         await thisPc.destroy()
-
         .then(async function(){
             if (oldImage !== undefined && oldImage !== null){
-                var fs= require ('fs');
-                fs.unlinkSync('./public'+oldImage)
+                    const s3 = new aws.S3()
+                    s3.deleteObject({
+                        Bucket: 'campaign-tracker',
+                        Key: 'pcs/'+oldImage
+                    },
+                    function (err,data){})
             }
-        })
-        .then (async function(){
+        }).then (async function(){
             const campaign = await req.campaign;
             try{
                 const pcs = await campaign.getPcs();
@@ -286,8 +306,7 @@ router.post('/deletePc', uploadPc.none(), async (req, res) => {
                 }
             }catch(err){
                 console.log(err);
-            } 
-
+            }
         });
     }
 });
