@@ -4,27 +4,21 @@ const models = require('../../models');
 const aws = require('aws-sdk');
 const multer = require('multer');
 const multerS3 = require('multer-s3');
-const fs = require('fs')
+
 const dateNow = Date.now() //date used for unique image id
 const Bucket = process.env.AWS_BUCKET_NAME
-
 aws.config.update({
     secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY_ID,
     accessKeyId: process.env.AWS_ACCESS_KEY_ID,
     region: process.env.AWS_REGION,
 });
-
-
 const s3 = new aws.S3();
-
-const uploadPc = multer({
+const upload = multer({
     storage: multerS3({
         s3: s3,
         acl: 'public-read',
-        bucket: 'campaign-tracker',
+        bucket: Bucket,
         key: function (req, file, cb) {
-            console.log(file);
-            console.log(dateNow);
             cb(null, 'pcs/'+dateNow+file.originalname);
         }
     })
@@ -43,8 +37,7 @@ router.get('/', async function (req,res){
         console.log(err);
     } 
 });
-router.post("/addPcWithImage", uploadPc.single('file'), async (req,res) => {
-
+router.post("/addPc", upload.any(), async (req,res) => {
     const newPcName = req.body.pcName;
     const newPcClass = req.body.pcClass;
     const newPlayerName = req.body.playerName;
@@ -56,9 +49,23 @@ router.post("/addPcWithImage", uploadPc.single('file'), async (req,res) => {
     const newPcDescription = req.body.pcDescription;
     const campaignId = req.campaign.id
     const campaign = await models.Campaign.findByPk(campaignId);
-    const newPcImageSrc = dateNow + req.file.originalname
-    
+
+    let newImageSrc = '';
+    const newImageSrcLookup = new Promise((resolve, reject) => {
+        if (req.files){
+             let filename = dateNow+req.files[0].originalname;
+             resolve(filename);
+        }
+        else{reject('')}
+    })
     if (campaign) {
+        const checkSrc = () => {
+            newImageSrcLookup.then(function(file){
+                newImageSrc = file;
+            }),(blank) => {newImageSrc = blank}
+        }
+       await checkSrc();
+
        await models.Pc.create({
             pcName: newPcName, 
             pcClass: newPcClass,
@@ -69,10 +76,10 @@ router.post("/addPcWithImage", uploadPc.single('file'), async (req,res) => {
             pcSharedBio: newPcSharedBio,
             pcPrivateBio: newPcPrivateBio,
             pcDescription: newPcDescription,
-            imageSrc: newPcImageSrc
+            imageSrc: newImageSrc
             })
-             .then(pc => {
-                campaign.addPc(pc)
+             .then(function (pc) {
+               return campaign.addPc(pc)
             })
             .then (async function(){
                 try{
@@ -91,103 +98,9 @@ router.post("/addPcWithImage", uploadPc.single('file'), async (req,res) => {
         }
 });
 
-router.post('/addPc', uploadPc.none(), async (req, res) => {
-    const newPcName = req.body.pcName;
-    const newPcClass = req.body.pcClass;
-    const newPlayerName = req.body.playerName;
-    const newPcRace = req.body.pcRace;
-    const newPcLevel = req.body.pcLevel;
-    const newPcLifestate = req.body.pcLifestate;
-    const newPcSharedBio = req.body.pcSharedBio;
-    const newPcPrivateBio = req.body.pcPrivateBio;
-    const newPcDescription = req.body.pcDescription;
-    const campaignId = req.campaign.id;
-    const campaign = await models.Campaign.findByPk(campaignId);
 
-    if (campaign) {
-        await models.Pc.create({
-            pcName: newPcName, 
-            pcClass: newPcClass, 
-            playerName: newPlayerName,
-            pcRace: newPcRace,
-            pcLevel: newPcLevel,
-            pcLifestate: newPcLifestate,
-            pcSharedBio: newPcSharedBio,
-            pcPrivateBio: newPcPrivateBio,
-            pcDescription: newPcDescription
-        })
-
-        .then(async function(pc){
-            campaign.addPc(pc);
-        })
-        
-        .then (async function(){
-            try{
-                let campaignId = req.campaign.id;
-                let campaign = await models.Campaign.findByPk(campaignId);                
-                let pcs = await campaign.getPcs();
-                if (pcs){
-                    res.json(pcs);
-                }else{
-                    res.json('no pcs');
-                }
-            }catch(err){
-                console.log(err);
-            } 
-        });
-    }
-});
-
-router.post('/updatePc',  async (req, res) => {
-    const pcId = req.body.id;
-    const newPcName = req.body.pcName;
-    const newPcClass = req.body.pcClass;
-    const newPlayerName = req.body.playerName;
-    const newPcRace = req.body.pcRace;
-    const newPcLevel = req.body.pcLevel;
-    const newPcLifestate = req.body.pcLifestate;
-    const newPcSharedBio = req.body.pcSharedBio;
-    const newPcPrivateBio = req.body.pcPrivateBio;
-
-    const newPcDescription = req.body.pcDescription;
-    
-    var thisPc = await models.Pc.findByPk(pcId);
-    
-    if (thisPc){
-        await thisPc.update({
-                pcName: newPcName, 
-                pcClass: newPcClass, 
-                playerName: newPlayerName,
-                pcRace: newPcRace,
-                pcLevel: newPcLevel,
-                pcLifestate: newPcLifestate,
-                pcSharedBio: newPcSharedBio,
-                pcPrivateBio: newPcPrivateBio,
-                pcDescription: newPcDescription
-            })
-           
-            .then (async function(){
-                const campaign = await req.campaign;
-                try{
-                    const pcs = await campaign.getPcs();
-                    if (pcs){
-                        res.json(pcs);
-                    }else{
-                        res.json('error');
-                    }
-                }catch(err){
-                    console.log(err);
-                } 
-
-            });
-    }
-    else{
-        res.json('error');
-    }
-});
-
-router.post('/updatePcWithImage', uploadPc.single('file'), async (req, res) => {
-    const pcId = req.body.id;
+router.post('/updatePc', upload.any(), async (req, res) => {
+    const pcId = req.body.pcId;
     const newPcName = req.body.pcName;
     const newPcClass = req.body.pcClass;
     const newPlayerName = req.body.playerName;
@@ -198,10 +111,28 @@ router.post('/updatePcWithImage', uploadPc.single('file'), async (req, res) => {
     const newPcPrivateBio = req.body.pcPrivateBio;
     const newPcDescription = req.body.pcDescription;
     const oldImage = req.body.oldImage;
-    const newPcImageSrc = dateNow + req.file.originalname
-    var thisPc = await models.Pc.findByPk(pcId);
-    
+    let thisPc = await models.Pc.findByPk(pcId);
+    let filename = ''
+    let newImageSrc = oldImage;
+    const newImageSrcLookup = new Promise((resolve, reject) => {
+        if (req.files){
+            filename = dateNow+req.files[0].originalname;
+             resolve(filename);
+        }
+        else{reject('')}
+    })
+
     if (thisPc){
+        const checkSrc = function () { //check if new image is present, if not assign old image
+            newImageSrcLookup
+            .then(function(file){
+                newImageSrc = file;
+            })
+            .catch(function(){
+                'no changes'
+            })
+        }
+        await checkSrc();
         await thisPc.update({
                 pcName: newPcName, 
                 pcClass: newPcClass, 
@@ -212,7 +143,7 @@ router.post('/updatePcWithImage', uploadPc.single('file'), async (req, res) => {
                 pcSharedBio: newPcSharedBio,
                 pcPrivateBio: newPcPrivateBio,
                 pcDescription: newPcDescription,
-                imageSrc: newPcImageSrc
+                imageSrc: newImageSrc
             })
             .then(async function(){
                 if (oldImage !== undefined && oldImage !== null){
@@ -235,7 +166,7 @@ router.post('/updatePcWithImage', uploadPc.single('file'), async (req, res) => {
                     }
                 }catch(err){
                     console.log(err);
-                } 
+                }
             });
     }
     else{
@@ -243,16 +174,14 @@ router.post('/updatePcWithImage', uploadPc.single('file'), async (req, res) => {
     }
 });
 
-router.post('/updatePcImage', uploadPc.single('file'), async (req, res) => {
+router.post('/updatePcImage', upload.single('file'), async (req, res) => {
     const pcId = req.body.PcId;
     const oldImage = req.body.oldImage;
-   
-    const newPcImageSrc = dateNow + req.file.originalname
-   
+    const newImageSrc = dateNow + req.file.originalname
     const thisPc = await models.Pc.findByPk(pcId);
     if (thisPc){
         await thisPc.update({
-                imageSrc: newPcImageSrc
+                imageSrc: newImageSrc
             })
             .then(async function(){
                 if (oldImage !== undefined && oldImage !== null){
@@ -280,7 +209,7 @@ router.post('/updatePcImage', uploadPc.single('file'), async (req, res) => {
     }
 });
 
-router.post('/deletePc', uploadPc.none(), async (req, res) => {
+router.post('/deletePc', upload.none(), async (req, res) => {
     const pcId = req.body.id;
     let thisPc = await models.Pc.findByPk(pcId);
     const oldImage = req.body.imageSrc;
@@ -288,14 +217,14 @@ router.post('/deletePc', uploadPc.none(), async (req, res) => {
         await thisPc.destroy()
         .then(async function(){
             if (oldImage !== undefined && oldImage !== null){
-                    const s3 = new aws.S3()
-                    s3.deleteObject({
-                        Bucket: 'campaign-tracker',
-                        Key: 'pcs/'+oldImage
-                    },
-                    function (err,data){})
+                const s3 = new aws.S3()
+                s3.deleteObject({
+                    Bucket: Bucket,
+                    Key: 'pcs/'+oldImage
+                },
+                function (err,data){})
             }
-        }).then (async function(){
+        }).then (async function(){ 
             const campaign = await req.campaign;
             try{
                 const pcs = await campaign.getPcs();
