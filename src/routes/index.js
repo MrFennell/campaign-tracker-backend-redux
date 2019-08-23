@@ -2,7 +2,13 @@ const express = require('express');
 const path = require('path');
 const router = express.Router();
 const models = require('../../models');
-
+const aws = require('aws-sdk');
+const Bucket = process.env.AWS_BUCKET_NAME
+aws.config.update({
+    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY_ID,
+    accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+    region: process.env.AWS_REGION,
+});
 // router.get('/', async function(req, res){
 //     res.json(index);
 // });
@@ -155,8 +161,12 @@ router.post('/deleteCampaign', async (req, res) => {
                     let pc = pcs[i];
                     let image = pc.imageSrc;
                     if (image!== undefined && image!== null){
-                        var fs= require ('fs');
-                        fs.unlinkSync('./public'+image)
+                        const s3 = new aws.S3()
+                        s3.deleteObject({
+                            Bucket: Bucket,
+                            Key: 'pcs/'+image
+                        },
+                        function (err,data){})
                     }
                 }
             }
@@ -173,8 +183,12 @@ router.post('/deleteCampaign', async (req, res) => {
                     let npc = npcs[i];
                     let image = npc.imageSrc;
                     if (image!== undefined && image!== null){
-                        var fs= require ('fs');
-                        fs.unlinkSync('./public'+image)
+                        const s3 = new aws.S3()
+                        s3.deleteObject({
+                            Bucket: Bucket,
+                            Key: 'npcs/'+image
+                        },
+                        function (err,data){})
                     }
                 }
             }
@@ -191,8 +205,12 @@ router.post('/deleteCampaign', async (req, res) => {
                     let location = locations[i];
                     let image = location.imageSrc;
                     if (image!== undefined && image!== null){
-                        var fs= require ('fs');
-                        fs.unlinkSync('./public'+image)
+                        const s3 = new aws.S3()
+                        s3.deleteObject({
+                            Bucket: Bucket,
+                            Key: 'locations/'+image
+                        },
+                        function (err,data){})
                     }
                 }
             }

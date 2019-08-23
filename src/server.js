@@ -54,7 +54,8 @@ app.use(function(req, res, next) {
                 req.campaign = campaign;
                 next();
             })
-    } else {
+    } else if(req.session) {
+        req.campaign = null;
         next();
     }
 });

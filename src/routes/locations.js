@@ -20,7 +20,6 @@ const upload = multer({
         bucket: Bucket,
         key: function (req, file, cb) {
             console.log(file);
-            console.log(dateNow);
             cb(null, 'locations/'+dateNow+file.originalname);
         }
     })
@@ -154,24 +153,41 @@ router.post('/updateLocation', upload.any(), async (req, res) => {
     }
 });
 
-router.post('/updateLocationImage', upload.single('file'), async (req, res) => {
-    const locationId = req.body.LocationId;
+router.post('/updateLocationImage', upload.any(), async (req, res) => {
+    const locationId = req.body.locationId;
     const oldImage = req.body.oldImage;
-    const fileDestination = req.file.destination;
-        
-    const fileName = req.file.filename;
-    const slicedFileDestination = fileDestination.slice(8);
-    const newImageSrc = slicedFileDestination + "/" + fileName;
     let thisLocation = await models.Location.findByPk(locationId);
-
+    let filename = ''
+    let newImageSrc = oldImage;
+    const newImageSrcLookup = new Promise((resolve, reject) => {
+        if (req.files){
+            filename = dateNow+req.files[0].originalname;
+             resolve(filename);
+        }
+        else{reject('')}
+    })
     if (thisLocation){
+        const checkSrc = function () { //check if new image is present, if not assign old image
+            newImageSrcLookup
+            .then(function(file){
+                newImageSrc = file;
+            })
+            .catch(function(){
+                'no changes'
+            })
+        }
+        await checkSrc();
         await thisLocation.update({
                 imageSrc: newImageSrc
             })
             .then(async function(){
                 if (oldImage !== undefined && oldImage !== null){
-                    var fs= require ('fs');
-                    fs.unlinkSync('./public'+oldImage)
+                    const s3 = new aws.S3()
+                    s3.deleteObject({
+                        Bucket: Bucket,
+                        Key: 'locations/'+oldImage
+                    },
+                    function (err,data){})
                 }
             })
             .then (async function(){
@@ -187,6 +203,8 @@ router.post('/updateLocationImage', upload.single('file'), async (req, res) => {
                     console.log(err);
                 } 
             });
+    }else{
+        res.json('error-outer');
     }
 });
 
