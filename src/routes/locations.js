@@ -19,7 +19,6 @@ const upload = multer({
         acl: 'public-read',
         bucket: Bucket,
         key: function (req, file, cb) {
-            console.log(file);
             cb(null, 'locations/'+dateNow+file.originalname);
         }
     })
@@ -64,7 +63,7 @@ router.post('/addLocation', upload.any(), async (req, res) => {
                 'no changes'
             })
         }
-       await checkSrc();	
+        await checkSrc();	
 
         await models.Location.create({
             name: newName, 

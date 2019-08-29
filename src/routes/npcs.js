@@ -19,8 +19,6 @@ const upload = multer({
         acl: 'public-read',
         bucket: Bucket,
         key: function (req, file, cb) {
-            console.log(file);
-            console.log(dateNow);
             cb(null, 'npcs/'+dateNow+file.originalname);
         }
     })

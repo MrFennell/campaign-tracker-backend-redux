@@ -15,6 +15,7 @@ module.exports = (sequelize, DataTypes) => {
   }, {});
   Pc.associate = function(models) {
     models.Pc.hasMany(models.Image);
+    models.Pc.hasMany(models.PcNpcRelationship);
   };
   return Pc;
 };
