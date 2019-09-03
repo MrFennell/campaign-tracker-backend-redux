@@ -9,7 +9,6 @@ require('dotenv').config()
 
 const app = express();
 
-
 app.locals.models = models;
 
 app.use(morgan(process.env.NODE_ENV === 'development' ? 'dev' : 'combined'));

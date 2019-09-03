@@ -7,6 +7,7 @@ module.exports = (sequelize, DataTypes) => {
   }, {});
   Campaign.associate = function(models) {
     // Campaign.belongsToMany(models.User, {through: 'UserCampaign'});
+    
   };
   return Campaign;
 };
