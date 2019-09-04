@@ -54,15 +54,11 @@ router.post('/addPcNpcRelationship', async (req,res) =>{
     const campaign = req.campaign;
     const relationship = req.body.relationship;
     const pcId = req.body.pcId
-    const pcName = req.body.pcName
     const npcId = req.body.npcId
-    const npcName = req.body.npcName
     if(campaign){
         models.Relationship.create({
             PcId: pcId,
             NpcId: npcId,
-            PcName: pcName,
-            NpcName: npcName,
             Relationship: relationship
         })
         .then(function (relationshipModel) {
@@ -90,15 +86,11 @@ router.post('/addPcLocationRelationship', async (req,res) =>{
     const campaign = req.campaign;
     const relationship = req.body.relationship;
     const pcId = req.body.pcId
-    const pcName = req.body.pcName
     const locationId = req.body.locationId
-    const locationName = req.body.locationName
     if(campaign){
         models.Relationship.create({
             PcId: pcId,
             LocationId: locationId,
-            PcName: pcName,
-            LocationName: locationName,
             Relationship: relationship
         })
         .then(function (relationshipModel) {
@@ -132,6 +124,5 @@ router.post('/deleteRelationship', async (req,res) =>{
             res.json(rel)
         })
 });
-
 
 module.exports = router;

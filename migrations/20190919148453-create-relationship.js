@@ -11,38 +11,23 @@ module.exports = {
       PcId: {
         type: Sequelize.INTEGER
       },
-      NpcId: {
-        type: Sequelize.INTEGER
-      },
-      LocationId: {
-        type: Sequelize.INTEGER
-      },
       PcId2: {
+        type: Sequelize.INTEGER
+      },
+      NpcId: {
         type: Sequelize.INTEGER
       },
       NpcId2: {
         type: Sequelize.INTEGER
       },
+      LocationId: {
+        type: Sequelize.INTEGER
+      },
       LocationId2: {
         type: Sequelize.INTEGER
       },
-      PcName:{
-        type: Sequelize.STRING
-      },
-      NpcName:{
-        type: Sequelize.STRING
-      },
-      LocationName:{
-        type: Sequelize.STRING
-      },
-      PcName2:{
-        type: Sequelize.STRING
-      },
-      NpcName2:{
-        type: Sequelize.STRING
-      },
-      LocationName2:{
-        type: Sequelize.STRING
+      SessionId:{
+        type: Sequelize.INTEGER
       },
       Relationship: {
         type: Sequelize.STRING
