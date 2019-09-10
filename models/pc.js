@@ -1,7 +1,7 @@
 'use strict';
 module.exports = (sequelize, DataTypes) => {
   const Pc = sequelize.define('Pc', {
-    pcName: DataTypes.STRING,
+    name: DataTypes.STRING,
     playerName: DataTypes.STRING,
     pcClass: DataTypes.STRING,
     pcRace: DataTypes.STRING,

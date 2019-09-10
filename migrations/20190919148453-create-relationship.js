@@ -29,10 +29,10 @@ module.exports = {
       SessionId:{
         type: Sequelize.INTEGER
       },
-      Relationship: {
+      relationship: {
         type: Sequelize.STRING
       },
-      Description: {
+      description: {
         type: Sequelize.STRING
       },
       createdAt: {

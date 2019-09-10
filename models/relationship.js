@@ -8,8 +8,8 @@ module.exports = (sequelize, DataTypes) => {
     NpcId2: DataTypes.STRING,
     LocationId2: DataTypes.STRING,
     SessionId: DataTypes.STRING,
-    Relationship: DataTypes.STRING,
-    Description: DataTypes.STRING,
+    relationship: DataTypes.STRING,
+    description: DataTypes.STRING,
   }, {});
   Relationship.associate = function(models) {
   };
