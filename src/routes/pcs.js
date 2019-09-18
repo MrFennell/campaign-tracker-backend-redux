@@ -38,7 +38,7 @@ router.get('/', async function (req,res){
     } 
 });
 router.post("/addPc", upload.any(), async (req,res) => {
-    const newPcName = req.body.pcName;
+    const newName = req.body.name;
     const newPcClass = req.body.pcClass;
     const newPlayerName = req.body.playerName;
     const newPcRace = req.body.pcRace;
@@ -67,7 +67,7 @@ router.post("/addPc", upload.any(), async (req,res) => {
        await checkSrc();
 
        await models.Pc.create({
-            pcName: newPcName, 
+            name: newName, 
             pcClass: newPcClass,
             playerName: newPlayerName,
             pcRace: newPcRace,
@@ -101,7 +101,7 @@ router.post("/addPc", upload.any(), async (req,res) => {
 
 router.post('/updatePc', upload.any(), async (req, res) => {
     const pcId = req.body.pcId;
-    const newPcName = req.body.pcName;
+    const newName = req.body.name;
     const newPcClass = req.body.pcClass;
     const newPlayerName = req.body.playerName;
     const newPcRace = req.body.pcRace;
@@ -134,7 +134,7 @@ router.post('/updatePc', upload.any(), async (req, res) => {
         }
         await checkSrc();
         await thisPc.update({
-                pcName: newPcName, 
+                name: newName, 
                 pcClass: newPcClass, 
                 playerName: newPlayerName,
                 pcRace: newPcRace,
