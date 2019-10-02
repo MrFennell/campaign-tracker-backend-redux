@@ -98,6 +98,7 @@ router.get('/campaignThumbnails', async function (req,res){
                         obj.Role = campaigns[i].UserCampaign.role;
                         obj.id = campaigns[i].id;
                         obj.title = campaigns[i].title;
+                        obj.description = campaigns[i].description;
                         obj.thumbnails = urls;
                         campaignList.push(obj);
                         obj = {}
